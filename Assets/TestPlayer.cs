@@ -16,7 +16,7 @@ public class TestPlayer : MonoBehaviour
 
     float rotateTime = 1;
 
-    float fallvelocity;
+    float fallvelocity; // unit vector is Vector3.down
 
     void Start()
     {
@@ -38,6 +38,19 @@ public class TestPlayer : MonoBehaviour
         {
             agent.velocity = xAxis * moveX * agent.speed;
             anime.SetFloat("speed", agent.velocity.magnitude);
+
+            if (Input.GetButtonDown("Jump"))
+            {
+                cc.enabled = true;
+                agent.enabled = false;
+                anime.SetBool("landing", false);
+                fallvelocity = -10;
+            }
+
+            if (Input.GetButtonDown("Fire1"))
+            {
+                anime.SetTrigger("AttackTrigger");
+            }
         }
         else if (anime.GetBool("catchCriff"))
         {
@@ -52,6 +65,11 @@ public class TestPlayer : MonoBehaviour
             Vector3 moveVelocity = xAxis * moveX * agent.speed + Vector3.down * fallvelocity;
             cc.Move(moveVelocity * Time.deltaTime);
             anime.SetFloat("speed", 0);
+        }
+
+        if (transform.position.y < -10)
+        {
+            Destroy(gameObject);
         }
 
         // CameraMotion (for Player only)
@@ -87,9 +105,9 @@ public class TestPlayer : MonoBehaviour
     void OnControllerColliderHit(ControllerColliderHit hit)
     {
         NavMeshHit navhit;
-        if (NavMesh.SamplePosition(transform.position, out navhit, 0.01f, agent.areaMask))
+        if (NavMesh.SamplePosition(transform.position, out navhit, cc.radius, agent.areaMask))
         {
-            cc.enabled = true;
+            cc.enabled = false;
             agent.enabled = true;
             anime.SetBool("landing", true);
         }
