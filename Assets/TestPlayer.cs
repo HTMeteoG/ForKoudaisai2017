@@ -34,37 +34,40 @@ public class TestPlayer : MonoBehaviour
     {
         float moveX = Input.GetAxis("Horizontal");
 
-        if (anime.GetBool("landing"))
+        if (!anime.GetBool("RejectInput"))
         {
-            agent.velocity = xAxis * moveX * agent.speed;
-            anime.SetFloat("speed", agent.velocity.magnitude);
+            if (anime.GetBool("landing"))
+            {
+                agent.velocity = xAxis * moveX * agent.speed;
+                anime.SetFloat("speed", agent.velocity.magnitude);
 
-            if (Input.GetButtonDown("Jump"))
-            {
-                cc.enabled = true;
-                agent.enabled = false;
-                anime.SetBool("landing", false);
-                fallvelocity = -10;
-            }
+                if (Input.GetButtonDown("Jump"))
+                {
+                    cc.enabled = true;
+                    agent.enabled = false;
+                    anime.SetBool("landing", false);
+                    fallvelocity = -10;
+                }
 
-            if (Input.GetButtonDown("Fire1"))
-            {
-                anime.SetTrigger("AttackTrigger");
+                if (Input.GetButtonDown("Fire1"))
+                {
+                    anime.SetTrigger("AttackTrigger");
+                }
             }
-        }
-        else if (anime.GetBool("catchCriff"))
-        {
-            if (Input.GetButtonDown("Jump"))
+            else if (anime.GetBool("catchCriff"))
             {
-                anime.SetTrigger("JumpTrigger");
+                if (Input.GetButtonDown("Jump"))
+                {
+                    anime.SetTrigger("JumpTrigger");
+                }
             }
-        }
-        else
-        {
-            fallvelocity += 9.8f * Time.deltaTime;
-            Vector3 moveVelocity = xAxis * moveX * agent.speed + Vector3.down * fallvelocity;
-            cc.Move(moveVelocity * Time.deltaTime);
-            anime.SetFloat("speed", 0);
+            else
+            {
+                fallvelocity += 9.8f * Time.deltaTime;
+                Vector3 moveVelocity = xAxis * moveX * agent.speed + Vector3.down * fallvelocity;
+                cc.Move(moveVelocity * Time.deltaTime);
+                anime.SetFloat("speed", 0);
+            }
         }
 
         if (transform.position.y < -10)
