@@ -16,7 +16,7 @@ namespace koudaigame2017
         public void OnTriggerEnter(Collider other)
         {
             GameObject hitterobject = other.transform.root.gameObject;
-            HitterDummy hitter = hitterobject.GetComponentInChildren<HitterDummy>();
+            Hitter hitter = hitterobject.GetComponentInChildren<Hitter>();
             if (hitter != null)
             {
                 Vector3 damVec = (hitterobject.transform.position - owner.transform.position).normalized * 5;

@@ -84,9 +84,11 @@
     <Compile Include="Assets\AttackCollider.cs" />
     <Compile Include="Assets\Attack_state.cs" />
     <Compile Include="Assets\ClimbCriff_state.cs" />
-    <Compile Include="Assets\HitterDummy.cs" />
+    <Compile Include="Assets\DeadDebris.cs" />
+    <Compile Include="Assets\Hitter.cs" />
     <Compile Include="Assets\SceneField.cs" />
     <Compile Include="Assets\StageManager.cs" />
+    <Compile Include="Assets\TestNPC.cs" />
     <Compile Include="Assets\TestPlayer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
