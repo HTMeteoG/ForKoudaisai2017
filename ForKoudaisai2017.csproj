@@ -82,9 +82,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\AttackCollider.cs" />
+    <Compile Include="Assets\AttackColliderT.cs" />
     <Compile Include="Assets\Attack_state.cs" />
+    <Compile Include="Assets\Attack_state_Player.cs" />
     <Compile Include="Assets\ClimbCriff_state.cs" />
     <Compile Include="Assets\DeadDebris.cs" />
+    <Compile Include="Assets\EvolutionaryProgramming\EPCharacter.cs" />
+    <Compile Include="Assets\EvolutionaryProgramming\EPManager.cs" />
+    <Compile Include="Assets\EvolutionaryProgramming\EP_Input.cs" />
+    <Compile Include="Assets\EvolutionaryProgramming\EP_oldInput.cs" />
     <Compile Include="Assets\Hitter.cs" />
     <Compile Include="Assets\SceneField.cs" />
     <Compile Include="Assets\StageManager.cs" />

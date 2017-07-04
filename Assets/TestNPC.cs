@@ -11,11 +11,12 @@ namespace koudaigame2017
         protected Animator anime;
         protected CharacterController cc;
         protected Vector3 xAxis = Vector3.forward;
-        protected Vector3 newXAxis;
 
-        protected float rotateTime = 1;
+        protected Vector3 moveVelocity; // using only in Sky
+        protected bool jumpFlag;
+        protected bool attackFlag;
 
-        protected Vector3 fallvelocity; // unit vector is Vector3.down
+        protected Vector3 fallvelocity;
 
         protected float HP = 100; //仮設状態
         [SerializeField]
@@ -32,43 +33,43 @@ namespace koudaigame2017
 
         protected virtual void Update()
         {
-            float moveX = 0;//Input.GetAxis("Horizontal");
-
             if (!anime.GetBool("RejectInput"))
             {
                 if (anime.GetBool("landing"))
                 {
-                    agent.velocity = xAxis * moveX * agent.speed;
                     anime.SetFloat("speed", agent.velocity.magnitude);
 
-                    if (Input.GetButtonDown("Jump"))
+                    if (jumpFlag)
                     {
-                        //cc.enabled = true;
-                        //agent.enabled = false;
-                        //anime.SetBool("landing", false);
-                        //fallvelocity = -10;
+                        cc.enabled = true;
+                        agent.enabled = false;
+                        anime.SetBool("landing", false);
+                        fallvelocity = Vector3.up * 10;
                     }
 
-                    if (Input.GetButtonDown("Fire1"))
+                    if (attackFlag)
                     {
-                        //anime.SetTrigger("AttackTrigger");
+                        anime.SetTrigger("AttackTrigger");
                     }
                 }
                 else if (anime.GetBool("catchCriff"))
                 {
-                    if (Input.GetButtonDown("Jump"))
+                    if (jumpFlag)
                     {
-                        //anime.SetTrigger("JumpTrigger");
+                        anime.SetTrigger("JumpTrigger");
                     }
                 }
                 else
                 {
                     fallvelocity += Vector3.down * 9.8f * Time.deltaTime;
-                    Vector3 moveVelocity = xAxis * moveX * agent.speed + fallvelocity;
-                    fallvelocity *= 0.9f;
-                    cc.Move(moveVelocity * Time.deltaTime);
+                    Vector3 moveVec = moveVelocity + fallvelocity;
+                    cc.Move(moveVec * Time.deltaTime);
                     anime.SetFloat("speed", 0);
                 }
+            }
+            else
+            {
+                Stop();
             }
 
             if (transform.position.y < -10)
@@ -76,31 +77,29 @@ namespace koudaigame2017
                 Destroy(gameObject);
             }
 
-            // CameraMotion (for Player only)
-            if (rotateTime < 1)
+            jumpFlag = false;
+            attackFlag = false;
+        }
+
+        public Vector3 GetXaxis()
+        {
+            NavMeshHit edge;
+            if (NavMesh.FindClosestEdge(transform.position, out edge, NavMesh.AllAreas))
             {
-                rotateTime += Time.deltaTime;
-                xAxis = Vector3.RotateTowards(xAxis, newXAxis, rotateTime, 0);
+                Vector3 rightVec = edge.position - transform.position;
+                return Vector3.Cross(rightVec, Vector3.up);
             }
-            else if (Input.GetButtonDown("Vertical"))
+            else
             {
-                //if (Input.GetAxis("Vertical") >= 0)
-                //{
-                //    newXAxis = Vector3.Cross(xAxis, Vector3.up);
-                //}
-                //else
-                //{
-                //    newXAxis = -Vector3.Cross(xAxis, Vector3.up);
-                //}
-                //rotateTime = 0;
+                return Vector3.zero;
             }
         }
 
         //着地、空中接触のみに用いる。ダメージ判定はしない。
-        void OnControllerColliderHit(ControllerColliderHit hit)
+        public virtual void OnControllerColliderHit(ControllerColliderHit hit)
         {
             NavMeshHit navhit;
-            if (NavMesh.SamplePosition(transform.position, out navhit, cc.radius, agent.areaMask))
+            if (NavMesh.SamplePosition(transform.position, out navhit, cc.radius * 1.5f, agent.areaMask))
             {
                 cc.enabled = false;
                 agent.enabled = true;
@@ -121,12 +120,16 @@ namespace koudaigame2017
                 {
                     fallvelocity = Vector3.zero;
                 }
+                else
+                {
+                    fallvelocity = transform.position + Vector3.up * cc.height * 0.5f - hit.point;
+                }
             }
         }
 
-        public virtual void Damage(Vector3 vec)
+        public virtual void Damage(float val, Vector3 vec)
         {
-            HP -= 10;//仮置き状態
+            HP += val;//仮置き状態
 
             if (HP <= 0)
             {
@@ -139,19 +142,41 @@ namespace koudaigame2017
                 anime.SetBool("landing", false);
                 cc.enabled = true;
                 agent.enabled = false;
-                fallvelocity = vec;
+
+                Vector3 Xaxis = GetXaxis();
+                if (Xaxis != Vector3.zero)
+                {
+                    fallvelocity = Vector3.Project(vec, Xaxis).normalized;
+                }
+                else
+                {
+                    //fallvelocity = vec;
+                }
             }
+        }
+
+        public virtual void Damage(Vector3 vec)
+        {
+            Damage(-10, vec);
         }
 
         protected virtual void Dead()
         {
-            if(deadObject != null)
+            if (deadObject != null)
             {
                 GameObject d = Instantiate(deadObject, transform.position, transform.rotation);
                 d.transform.DetachChildren();
                 Destroy(d, 0.1f);
             }
             Destroy(gameObject);
+        }
+
+        public void Stop()
+        {
+            if (agent.enabled)
+            {
+                agent.ResetPath();
+            }
         }
     }
 
@@ -160,6 +185,42 @@ namespace koudaigame2017
         protected override void Start()
         {
             base.Start();
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+        }
+
+        public void SetDestination(Vector3 position)
+        {
+            if (anime.GetBool("landing"))
+            {
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(position, out hit, 5, agent.areaMask))
+                {
+                    agent.SetDestination(hit.position);
+                }
+            }
+        }
+
+        public void SetMoveVelocity(Vector3 vec, float ratio)
+        {
+            //ratio is 0 to 1
+            if (!anime.GetBool("landing") && !anime.GetBool("catchCriff"))
+            {
+                moveVelocity = vec.normalized * agent.speed * ratio;
+            }
+        }
+
+        public void SetJumpFlag()
+        {
+            jumpFlag = true;
+        }
+
+        public void SetAttackFlag()
+        {
+            attackFlag = true;
         }
     }
 }

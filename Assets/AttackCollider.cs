@@ -6,11 +6,11 @@ namespace koudaigame2017
 {
     public class AttackCollider : MonoBehaviour
     {
-        TestPlayer owner;
+        Character owner;
 
         public void SetOwner(GameObject g)
         {
-            owner = g.GetComponent<TestPlayer>();
+            owner = g.GetComponent<Character>();
         }
 
         public void OnTriggerEnter(Collider other)
@@ -19,7 +19,7 @@ namespace koudaigame2017
             Hitter hitter = hitterobject.GetComponentInChildren<Hitter>();
             if (hitter != null)
             {
-                Vector3 damVec = (hitterobject.transform.position - owner.transform.position).normalized * 5;
+                Vector3 damVec = (hitter.gameObject.transform.position - owner.transform.position).normalized * 5;
                 hitter.Damage(damVec);
             }
         }
